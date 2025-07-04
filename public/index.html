@@ -2,19 +2,49 @@
 <html>
 <head>
   <title>GitHub Webhook Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    #events {
+      margin-top: 20px;
+    }
+    .event {
+      background: white;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-left: 4px solid #007bff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-  <h2>Live GitHub Events</h2>
-  <div id="events"></div>
+  <h2>🔔 Live GitHub Events (Updated every 15s)</h2>
+  <div id="events">Loading...</div>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
-    socket.on('github-event', (data) => {
-      const el = document.createElement('div');
-      el.innerText = `${data.event}: ${JSON.stringify(data.payload)}`;
-      document.getElementById('events').prepend(el);
-    });
+    async function fetchEvents() {
+      try {
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        const eventsDiv = document.getElementById('events');
+        eventsDiv.innerHTML = ''; // Clear old content
+
+        data.forEach(event => {
+          const div = document.createElement('div');
+          div.className = 'event';
+          div.innerText = `${event.event.toUpperCase()}: ${JSON.stringify(event.payload, null, 2)}`;
+          eventsDiv.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      }
+    }
+
+    fetchEvents(); // Initial load
+    setInterval(fetchEvents, 15000); // Refresh every 15 seconds
   </script>
 </body>
 </html>
